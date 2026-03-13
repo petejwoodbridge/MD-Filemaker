@@ -23,7 +23,7 @@ body{font-family:'VT323','Courier New',Courier,monospace;background:#0a0005;colo
 .container{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:2rem 1.5rem}
 
 header{text-align:center;margin-bottom:1.5rem;border-bottom:3px solid #ff2d78;padding-bottom:1rem;box-shadow:0 4px 0 #00d4ff}
-header h1{font-family:'Press Start 2P',monospace;font-size:1.4rem;color:#ff2d78;text-shadow:3px 3px 0 #00d4ff,-1px -1px 0 #c800a0,0 0 20px rgba(255,45,120,.8);letter-spacing:.05em;line-height:1.6}
+header h1{font-family:'Press Start 2P',monospace;font-size:clamp(1.4rem,4.2vw,3rem);color:#ff2d78;text-shadow:3px 3px 0 #00d4ff,-1px -1px 0 #c800a0,0 0 20px rgba(255,45,120,.8);letter-spacing:.05em;line-height:1.6}
 header h1 span{color:#00d4ff;text-shadow:3px 3px 0 #ff2d78,-1px -1px 0 #0088cc}
 .subtitle{color:#00d4ff;font-size:1.1rem;margin-top:.6rem;text-shadow:0 0 8px rgba(0,212,255,.6);letter-spacing:.08em}
 
@@ -116,7 +116,7 @@ textarea::placeholder{color:#4a2060}
 
 footer{text-align:center;margin-top:3rem;color:#ff2d78;font-size:1.1rem;letter-spacing:.08em;border-top:3px solid #ff2d78;padding-top:1rem;text-shadow:0 0 12px rgba(255,45,120,.7),0 0 24px rgba(255,45,120,.4);font-family:'VT323','Courier New',monospace}
 
-@media(max-width:600px){.container{padding:1rem}header h1{font-size:.95rem}.drop-zone{padding:1.5rem .75rem}.output-header{flex-direction:column;gap:.6rem;align-items:flex-start}.tabs,.out-tabs{overflow-x:auto;flex-wrap:wrap}}
+@media(max-width:600px){.container{padding:1rem}header h1{font-size:clamp(.85rem,5vw,.95rem)}.drop-zone{padding:1.5rem .75rem}.output-header{flex-direction:column;gap:.6rem;align-items:flex-start}.tabs,.out-tabs{overflow-x:auto;flex-wrap:wrap}}
 </style>
 </head>
 <body>
