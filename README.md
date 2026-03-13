@@ -1,4 +1,4 @@
-<img src="screenshot.png" alt="Dreamlab Jarvis Filemaker UI" width="100%"/>
+<img src="DLJarvisFilemaker.PNG" alt="Dreamlab Jarvis Filemaker UI" width="100%"/>
 
 # Dreamlab Jarvis Filemaker
 
