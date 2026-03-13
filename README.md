@@ -1,4 +1,4 @@
-<img src="dreamlab.png" alt="Dreamlab" width="260"/>
+<img src="screenshot.png" alt="Dreamlab Jarvis Filemaker UI" width="100%"/>
 
 # Dreamlab Jarvis Filemaker
 
@@ -14,13 +14,24 @@ Everything runs locally in your browser tab. Drop a PDF, a Word doc, raw HTML, o
 
 ---
 
+## 🚀 Use Online (Recommended)
+
+**No download needed — works in any browser, on any device:**
+
+👉 **[https://petejwoodbridge.github.io/MD-Filemaker/](https://petejwoodbridge.github.io/MD-Filemaker/)**
+
+---
+
 ## ⬇️ Single-File Download
 
 **No install. No setup. Just download and open.**
 
 👉 [**Download jarvis-filemaker.html**](https://github.com/petejwoodbridge/MD-Filemaker/raw/main/jarvis-filemaker.html)
 
-Save the file anywhere on your computer. Open it in Chrome, Firefox, or Edge — that's it.
+> **Right-click the link above → "Save link as..."** to download the file.  
+> Then open it in Chrome, Firefox, or Edge — that's it.
+>
+> ⚠️ **PDF and DOCX conversion** may not work when opening a local file directly (browser security restrictions block CDN libraries). If that happens, use the [online version](https://petejwoodbridge.github.io/MD-Filemaker/) instead. Plain text, HTML, CSV, JSON, and XML always work offline.
 
 > **Note:** PDF and DOCX conversion requires an internet connection to load CDN libraries on first use. Plain text, HTML, CSV, JSON, XML work fully offline.
 
