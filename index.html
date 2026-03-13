@@ -32,7 +32,12 @@ header h1 span:not(.line){color:#00d4ff;text-shadow:3px 3px 0 #ff2d78,-1px -1px 
 .privacy-badge{font-family:'Press Start 2P',monospace;font-size:.77rem;color:#00d4ff;text-shadow:2px 2px 0 #ff2d78,-1px -1px 0 #0088cc,0 0 14px rgba(0,212,255,.8);letter-spacing:.1em;line-height:2;margin-top:.75rem;margin-bottom:.25rem;display:inline-block}
 .privacy-badge .lock-icon{font-style:normal;margin-right:.4em}
 
-/* Pixel blinking cursor decoration */
+/* Flashing arrows */
+.arrows-down{font-family:'Courier New',Courier,monospace;font-size:1.1rem;text-align:center;display:block;letter-spacing:.3em;margin:.4rem 0 .2rem;user-select:none}
+.arrows-down .a1{color:#ff2d78;text-shadow:0 0 8px #ff2d78;animation:arrowpulse 1s step-end infinite}
+.arrows-down .a2{color:#00d4ff;text-shadow:0 0 8px #00d4ff;animation:arrowpulse 1s step-end infinite .33s}
+.arrows-down .a3{color:#ff2d78;text-shadow:0 0 8px #ff2d78;animation:arrowpulse 1s step-end infinite .66s}
+@keyframes arrowpulse{0%,100%{opacity:1}50%{opacity:0}}
 .subtitle::after{content:' _';animation:blink .8s step-end infinite;color:#ff2d78}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
@@ -125,6 +130,11 @@ footer{text-align:center;margin-top:3rem;color:#ff2d78;font-size:1.1rem;letter-s
   <header>
     <h1><span class="line">Dreamlab</span><span class="line"><span>Jarvis</span></span><span class="line">Filemaker</span></h1>
     <p class="privacy-badge"><i class="lock-icon">&#128274;</i>100% client-side &middot; your files never leave your browser</p>
+    <p class="arrows-down">
+      <span class="a1">V V V V V V V V V V V V V V V</span><br>
+      <span class="a2">V V V V V V V V V V V V V V V</span><br>
+      <span class="a3">V V V V V V V V V V V V V V V</span>
+    </p>
     <p class="subtitle">Drop any file or paste text &mdash; get clean Jarvis Ready Markdown instantly</p>
   </header>
   <div id="libStatus">Initialising libraries&hellip;</div>
