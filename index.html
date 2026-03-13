@@ -18,7 +18,7 @@ body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
 body{font-family:'VT323','Courier New',Courier,monospace;background:#0a0005;color:#ff2d78;min-height:100vh;line-height:1.5;position:relative;image-rendering:pixelated}
 
 /* Logo tiled background at full brightness */
-#static-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.35}
+#static-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.30}
 
 .container{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:2rem 1.5rem}
 
@@ -110,7 +110,7 @@ textarea::placeholder{color:#4a2060}
 .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#ff2d78;color:#0a0005;padding:.55rem 1.2rem;font-family:'Press Start 2P',monospace;font-size:.7rem;z-index:9998;display:none;animation:toastIn .15s ease;box-shadow:4px 4px 0 #c800a0,0 0 24px rgba(255,45,120,.7);letter-spacing:.04em}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-footer{text-align:center;margin-top:3rem;color:#5a2070;font-size:.95rem;letter-spacing:.08em;border-top:1px dashed #3a1050;padding-top:1rem}
+footer{text-align:center;margin-top:3rem;color:#ff2d78;font-size:1.1rem;letter-spacing:.08em;border-top:3px solid #ff2d78;padding-top:1rem;text-shadow:0 0 12px rgba(255,45,120,.7),0 0 24px rgba(255,45,120,.4);font-family:'VT323','Courier New',monospace}
 
 @media(max-width:600px){.container{padding:1rem}header h1{font-size:.95rem}.drop-zone{padding:1.5rem .75rem}.output-header{flex-direction:column;gap:.6rem;align-items:flex-start}.tabs,.out-tabs{overflow-x:auto;flex-wrap:wrap}}
 </style>
@@ -172,7 +172,7 @@ footer{text-align:center;margin-top:3rem;color:#5a2070;font-size:.95rem;letter-s
       <span class="ext">.md</span>
     </div>
   </section>
-  <footer>Dreamlab Jarvis Filemaker &mdash; 100% client-side &middot; your files never leave your browser.</footer>
+  <footer>&#128274; Dreamlab Jarvis Filemaker &mdash; 100% client-side &middot; your files never leave your browser.</footer>
 </div>
 <div class="toast" id="toast"></div>
 <canvas id="static-canvas"></canvas>
@@ -192,7 +192,7 @@ footer{text-align:center;margin-top:3rem;color:#5a2070;font-size:.95rem;letter-s
     var d=imgData.data;
     var len=d.length;
     for(var i=0;i<len;i+=4){
-      var v=(Math.random()*140)|0;
+      var v=(Math.random()*90)|0;
       d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=255;
     }
     ctx.putImageData(imgData,0,0);

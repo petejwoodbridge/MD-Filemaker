@@ -4,7 +4,25 @@
 
 > Drop any file or paste text — get clean **Jarvis Ready Markdown** instantly.
 
-A retro-styled, 100% client-side tool that converts files and text into clean `.md` files ready for AI ingest. **Your files never leave your browser. No servers, no APIs, no build step.**
+---
+
+## 🔒 Your files never leave your browser.
+
+**100% client-side. No server. No upload. No API. No account. Nothing leaves your machine.**
+
+Everything runs locally in your browser tab. Drop a PDF, a Word doc, raw HTML, or paste any text — you get clean Markdown back instantly, entirely offline once loaded.
+
+---
+
+## ⬇️ Single-File Download
+
+**No install. No setup. Just download and open.**
+
+👉 [**Download jarvis-filemaker.html**](https://github.com/petejwoodbridge/MD-Filemaker/raw/main/jarvis-filemaker.html)
+
+Save the file anywhere on your computer. Open it in Chrome, Firefox, or Edge — that's it.
+
+> **Note:** PDF and DOCX conversion requires an internet connection to load CDN libraries on first use. Plain text, HTML, CSV, JSON, XML work fully offline.
 
 ---
 
@@ -67,10 +85,11 @@ Libraries used (all loaded from CDN, no install needed):
 ## Project Structure
 
 ```
-index.html     — Single-file app (HTML + inlined CSS)
-app.js         — All conversion logic
-dreamlab.png   — Dreamlab logo
-README.md      — This file
+index.html              — App (HTML + inlined CSS, loads app.js)
+app.js                  — All conversion logic
+jarvis-filemaker.html   — Single-file build (app.js inlined, download this)
+dreamlab.png            — Dreamlab logo
+README.md               — This file
 ```
 
 ---

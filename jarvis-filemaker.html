@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dreamlab Jarvis Filemaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* CRT scanline overlay */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0px,rgba(0,0,0,.13) 1px,transparent 1px,transparent 3px);
+  animation:scanroll 8s linear infinite}
+@keyframes scanroll{from{background-position:0 0}to{background-position:0 120px}}
+
+body{font-family:'VT323','Courier New',Courier,monospace;background:#0a0005;color:#ff2d78;min-height:100vh;line-height:1.5;position:relative;image-rendering:pixelated}
+
+/* Logo tiled background at full brightness */
+#static-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.30}
+
+.container{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:2rem 1.5rem}
+
+header{text-align:center;margin-bottom:1.5rem;border-bottom:3px solid #ff2d78;padding-bottom:1rem;box-shadow:0 4px 0 #00d4ff}
+header h1{font-family:'Press Start 2P',monospace;font-size:1.4rem;color:#ff2d78;text-shadow:3px 3px 0 #00d4ff,-1px -1px 0 #c800a0,0 0 20px rgba(255,45,120,.8);letter-spacing:.05em;line-height:1.6}
+header h1 span{color:#00d4ff;text-shadow:3px 3px 0 #ff2d78,-1px -1px 0 #0088cc}
+.subtitle{color:#00d4ff;font-size:1.1rem;margin-top:.6rem;text-shadow:0 0 8px rgba(0,212,255,.6);letter-spacing:.08em}
+
+/* Pixel blinking cursor decoration */
+.subtitle::after{content:' _';animation:blink .8s step-end infinite;color:#ff2d78}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+#libStatus{text-align:center;font-size:1rem;padding:.5rem 1rem;margin-bottom:1.5rem;background:#0a0005;border:2px solid #3a1050;color:#a060c0;letter-spacing:.05em}
+#libStatus.ok{color:#00d4ff;border-color:#00d4ff;text-shadow:0 0 8px #00d4ff;background:#001015}
+#libStatus.warn{color:#ff2d78;border-color:#ff2d78}
+#libStatus.err{color:#ff2d78;border-color:#ff2d78;background:#150008}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid #ff2d78;margin-bottom:1rem;gap:2px}
+.tab{padding:.5rem 1.1rem;background:#0a0005;border:2px solid #3a1050;border-bottom:none;color:#a060c0;cursor:pointer;font-family:'VT323','Courier New',monospace;font-size:1.1rem;letter-spacing:.05em;transition:all .1s}
+.tab:hover{color:#00d4ff;border-color:#00d4ff;text-shadow:0 0 6px #00d4ff}
+.tab.active{color:#ff2d78;background:#150010;border-color:#ff2d78;border-bottom:2px solid #150010;margin-bottom:-2px;text-shadow:0 0 8px rgba(255,45,120,.7)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* DROP ZONE */
+.drop-zone{border:3px dashed #ff2d78;padding:2.5rem 2rem;text-align:center;cursor:pointer;background:#0f0015;transition:all .1s;user-select:none;position:relative}
+.drop-zone::before{content:'[ ';position:absolute;top:8px;left:8px;color:#3a1050;font-size:.9rem}
+.drop-zone::after{content:' ]';position:absolute;bottom:8px;right:8px;color:#3a1050;font-size:.9rem}
+.drop-zone:hover,.drop-zone.over{border-color:#00d4ff;background:#001018;box-shadow:0 0 24px rgba(0,212,255,.25),inset 0 0 24px rgba(0,212,255,.06)}
+.drop-zone .icon{font-size:2.4rem;margin-bottom:.5rem;display:block}
+.drop-zone p{color:#a060c0;font-size:1.15rem}
+.drop-zone strong{color:#00d4ff}
+.drop-zone .hint{font-size:.95rem;color:#5a3070;margin-top:.4rem;letter-spacing:.03em}
+
+.file-info{display:none;align-items:center;justify-content:space-between;background:#0f0015;border:2px solid #ff2d78;padding:.5rem 1rem;margin-top:.75rem;font-size:1.1rem;color:#ff2d78}
+.btn-x{background:none;border:2px solid #3a1050;color:#a060c0;cursor:pointer;font-size:1rem;padding:.1rem .4rem;font-family:'VT323',monospace;line-height:1.2}
+.btn-x:hover{border-color:#ff2d78;color:#ff2d78}
+
+textarea{width:100%;min-height:180px;background:#0f0015;border:2px solid #3a1050;color:#e0d0f5;padding:1rem;font-family:'VT323','Courier New',Courier,monospace;font-size:1.1rem;resize:vertical;line-height:1.5}
+textarea:focus{outline:none;border-color:#00d4ff;box-shadow:0 0 0 2px rgba(0,212,255,.2),0 0 14px rgba(0,212,255,.12)}
+textarea::placeholder{color:#4a2060}
+
+.btn-convert{display:block;width:100%;margin-top:1rem;padding:.75rem 1.5rem;background:#ff2d78;color:#0a0005;border:3px solid #ff2d78;font-family:'Press Start 2P',monospace;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .1s;letter-spacing:.06em;text-shadow:none;box-shadow:4px 4px 0 #c800a0,0 0 20px rgba(255,45,120,.5)}
+.btn-convert:hover{background:#00d4ff;border-color:#00d4ff;color:#0a0005;box-shadow:4px 4px 0 #0088cc,0 0 24px rgba(0,212,255,.6)}
+.btn-convert:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #c800a0}
+.btn-convert:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+
+.output-section{margin-top:2rem;animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:2px solid #00d4ff;padding-bottom:.5rem}
+.output-header h2{font-family:'Press Start 2P',monospace;font-size:.85rem;color:#00d4ff;text-shadow:2px 2px 0 #0088cc,0 0 12px rgba(0,212,255,.6);letter-spacing:.04em}
+.output-actions{display:flex;gap:.5rem}
+.btn-action{padding:.4rem .8rem;background:#0a0005;border:2px solid #3a1050;color:#e0d0f5;cursor:pointer;font-family:'VT323',monospace;font-size:1.1rem;letter-spacing:.04em;transition:all .1s;box-shadow:2px 2px 0 #1a0028}
+.btn-action:hover{border-color:#00d4ff;color:#00d4ff;box-shadow:2px 2px 0 #0088cc}
+.btn-dl{background:#00d4ff;border-color:#00d4ff;color:#0a0005;font-weight:700;box-shadow:3px 3px 0 #0088cc}
+.btn-dl:hover{background:#ff2d78;border-color:#ff2d78;box-shadow:3px 3px 0 #c800a0;color:#0a0005}
+
+.out-tabs{display:flex;border-bottom:2px solid #00d4ff;margin-bottom:0;gap:2px}
+.out-tab{padding:.4rem 1rem;background:#0a0005;border:2px solid #3a1050;border-bottom:none;color:#a060c0;cursor:pointer;font-family:'VT323',monospace;font-size:1.1rem;transition:all .1s}
+.out-tab:hover{color:#ff2d78;border-color:#ff2d78}
+.out-tab.active{color:#ff2d78;background:#150010;border-color:#ff2d78;border-bottom:2px solid #150010;margin-bottom:-2px}
+.out-content{display:none}
+.out-content.active{display:block}
+
+#markdownOutput{border-radius:0;cursor:text;min-height:260px;border-top:none}
+.md-preview{background:#0f0015;border:2px solid #ff2d78;border-top:none;padding:1.5rem;min-height:260px;overflow-x:auto}
+.md-preview h1,.md-preview h2,.md-preview h3,.md-preview h4,.md-preview h5,.md-preview h6{color:#00d4ff;margin:1rem 0 .4rem;border-bottom:2px solid #1a0030;padding-bottom:.2rem;font-family:'Press Start 2P',monospace;text-shadow:0 0 8px rgba(0,212,255,.4)}
+.md-preview h1{font-size:1rem}.md-preview h2{font-size:.9rem}.md-preview h3{font-size:.8rem}
+.md-preview p{margin:.4rem 0}
+.md-preview ul,.md-preview ol{padding-left:1.5rem;margin:.4rem 0}
+.md-preview code{background:#150025;padding:.1rem .35rem;font-size:1rem;font-family:'Courier New',Courier,monospace;color:#ff2d78;border:1px solid #3a1050}
+.md-preview pre{background:#150025;padding:1rem;overflow-x:auto;margin:.75rem 0;border:2px solid #3a1050}
+.md-preview pre code{background:none;padding:0;color:#00d4ff;border:none}
+.md-preview blockquote{border-left:4px solid #ff2d78;padding-left:1rem;color:#a060c0;margin:.75rem 0}
+.md-preview table{border-collapse:collapse;width:100%;margin:.75rem 0}
+.md-preview th,.md-preview td{border:1px solid #3a1050;padding:.35rem .7rem;text-align:left}
+.md-preview th{background:#150025;color:#00d4ff}
+.md-preview a{color:#ff2d78}
+.md-preview img{max-width:100%;image-rendering:pixelated}
+.md-preview hr{border:none;border-top:2px dashed #3a1050;margin:1rem 0}
+
+.fname-row{display:flex;align-items:center;gap:.5rem;margin-top:1rem}
+.fname-row label{color:#a060c0;font-size:1.1rem;white-space:nowrap}
+.fname-row input{background:#0f0015;border:2px solid #3a1050;color:#e0d0f5;padding:.38rem .6rem;font-family:'VT323',monospace;font-size:1.1rem;flex:1;max-width:220px}
+.fname-row input:focus{outline:none;border-color:#ff2d78;box-shadow:0 0 8px rgba(255,45,120,.3)}
+.ext{color:#a060c0;font-family:'Courier New',monospace}
+
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#ff2d78;color:#0a0005;padding:.55rem 1.2rem;font-family:'Press Start 2P',monospace;font-size:.7rem;z-index:9998;display:none;animation:toastIn .15s ease;box-shadow:4px 4px 0 #c800a0,0 0 24px rgba(255,45,120,.7);letter-spacing:.04em}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+footer{text-align:center;margin-top:3rem;color:#ff2d78;font-size:1.1rem;letter-spacing:.08em;border-top:3px solid #ff2d78;padding-top:1rem;text-shadow:0 0 12px rgba(255,45,120,.7),0 0 24px rgba(255,45,120,.4);font-family:'VT323','Courier New',monospace}
+
+@media(max-width:600px){.container{padding:1rem}header h1{font-size:.95rem}.drop-zone{padding:1.5rem .75rem}.output-header{flex-direction:column;gap:.6rem;align-items:flex-start}.tabs,.out-tabs{overflow-x:auto;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Dreamlab <span>Jarvis</span> Filemaker</h1>
+    <p class="subtitle">Drop any file or paste text &mdash; get clean Jarvis Ready Markdown instantly</p>
+  </header>
+  <div id="libStatus">Initialising libraries&hellip;</div>
+  <section>
+    <div class="tabs">
+      <button class="tab active" data-tab="upload" type="button">Upload File</button>
+      <button class="tab" data-tab="paste" type="button">Paste Text</button>
+      <button class="tab" data-tab="html" type="button">Paste HTML</button>
+    </div>
+    <div class="tab-content active" id="tab-upload">
+      <div class="drop-zone" id="dropZone">
+        <div class="icon">&#128196;</div>
+        <p>Drag &amp; drop a file here, or <strong>click to browse</strong></p>
+        <p class="hint">PDF &middot; DOCX &middot; DOC &middot; TXT &middot; HTML &middot; RTF &middot; CSV &middot; TSV &middot; JSON &middot; XML &middot; MD</p>
+      </div>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt,.html,.htm,.rtf,.csv,.tsv,.json,.xml,.md,.rst,.tex,.log,.epub" style="display:none">
+      <div class="file-info" id="fileInfo">
+        <span id="fileName"></span>
+        <button class="btn-x" id="clearFile" type="button">&#x2715;</button>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-paste">
+      <textarea id="pasteInput" placeholder="Paste plain text here..."></textarea>
+    </div>
+    <div class="tab-content" id="tab-html">
+      <textarea id="htmlInput" placeholder="Paste raw HTML here..."></textarea>
+    </div>
+    <button class="btn-convert" id="convertBtn" type="button">Convert to Markdown</button>
+  </section>
+  <section class="output-section" id="outputSection" style="display:none">
+    <div class="output-header">
+      <h2>Markdown Output</h2>
+      <div class="output-actions">
+        <button class="btn-action" id="copyBtn" type="button">Copy</button>
+        <button class="btn-action btn-dl" id="downloadBtn" type="button">Download .md</button>
+      </div>
+    </div>
+    <div class="out-tabs">
+      <button class="out-tab active" data-out="raw" type="button">Raw Markdown</button>
+      <button class="out-tab" data-out="preview" type="button">Preview</button>
+    </div>
+    <div class="out-content active" id="out-raw">
+      <textarea id="markdownOutput" readonly></textarea>
+    </div>
+    <div class="out-content" id="out-preview">
+      <div id="mdPreview" class="md-preview"></div>
+    </div>
+    <div class="fname-row">
+      <label for="outFilename">Filename:</label>
+      <input type="text" id="outFilename" value="output" placeholder="filename">
+      <span class="ext">.md</span>
+    </div>
+  </section>
+  <footer>&#128274; Dreamlab Jarvis Filemaker &mdash; 100% client-side &middot; your files never leave your browser.</footer>
+</div>
+<div class="toast" id="toast"></div>
+<canvas id="static-canvas"></canvas>
+<script>
+(function(){
+  var c=document.getElementById('static-canvas');
+  var ctx=c.getContext('2d');
+  var W,H,imgData;
+  function resize(){
+    W=c.width=window.innerWidth;
+    H=c.height=window.innerHeight;
+    imgData=ctx.createImageData(W,H);
+  }
+  window.addEventListener('resize',resize);
+  resize();
+  function drawStatic(){
+    var d=imgData.data;
+    var len=d.length;
+    for(var i=0;i<len;i+=4){
+      var v=(Math.random()*90)|0;
+      d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=255;
+    }
+    ctx.putImageData(imgData,0,0);
+    requestAnimationFrame(drawStatic);
+  }
+  drawStatic();
+})();
+</script>
+<script>window._L={pdf:false,mam:false,td:false};</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" onload="window._L.pdf=true" onerror="console.warn('pdf.js blocked')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" crossorigin="anonymous" onload="window._L.mam=true" onerror="console.warn('mammoth blocked')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/turndown/7.1.2/turndown.js" crossorigin="anonymous" onload="window._L.td=true" onerror="console.warn('turndown blocked')"></script>
+<script>
+// ============================================================
+// Dreamlab Jarvis Filemaker — 100% client-side file-to-Markdown converter
+// Fully resilient: works even if CDN libraries fail to load.
+// ============================================================
+
+(function () {
+    "use strict";
+
+    // Surface any uncaught JS error in the status bar
+    window.onerror = function (msg, src, line) {
+        var s = document.getElementById("libStatus");
+        if (s) { s.textContent = "JS Error: " + msg + " (line " + line + ")"; s.className = "err"; }
+        return false;
+    };
+
+    // ---- Lazy library accessors (never crash on init) ----
+    function getPdfJs() {
+        if (typeof pdfjsLib !== "undefined") return pdfjsLib;
+        return null;
+    }
+    function getMammoth() {
+        if (typeof mammoth !== "undefined") return mammoth;
+        return null;
+    }
+    function getTurndown() {
+        if (typeof TurndownService !== "undefined") {
+            if (!getTurndown._inst) {
+                try {
+                    getTurndown._inst = new TurndownService({
+                        headingStyle: "atx",
+                        codeBlockStyle: "fenced",
+                        bulletListMarker: "-",
+                        emDelimiter: "*",
+                    });
+                } catch (e) {
+                    return null;
+                }
+            }
+            return getTurndown._inst;
+        }
+        return null;
+    }
+
+    // ---- DOM refs ----
+    var tabs           = document.querySelectorAll(".tab");
+    var tabContents    = document.querySelectorAll(".tab-content");
+    var dropZone       = document.getElementById("dropZone");
+    var fileInput      = document.getElementById("fileInput");
+    var fileInfo       = document.getElementById("fileInfo");
+    var fileNameSpan   = document.getElementById("fileName");
+    var clearFileBtn   = document.getElementById("clearFile");
+    var pasteInput     = document.getElementById("pasteInput");
+    var htmlInput      = document.getElementById("htmlInput");
+    var convertBtn     = document.getElementById("convertBtn");
+    var outputSection  = document.getElementById("outputSection");
+    var markdownOut    = document.getElementById("markdownOutput");
+    var markdownPrev   = document.getElementById("mdPreview");
+    var copyBtn        = document.getElementById("copyBtn");
+    var downloadBtn    = document.getElementById("downloadBtn");
+    var outputTabs     = document.querySelectorAll(".out-tab");
+    var outputContents = document.querySelectorAll(".out-content");
+    var outputFilename = document.getElementById("outFilename");
+    var toastEl        = document.getElementById("toast");
+    var libStatus      = document.getElementById("libStatus");
+
+    var currentFile = null;
+    var activeTab   = "upload";
+
+    // ---- Show library availability after a short delay ----
+    setTimeout(function () {
+      try {  
+        var pdf = getPdfJs() ? "PDF" : null;
+        var doc = getMammoth() ? "DOCX" : null;
+        var td  = getTurndown() ? "HTML" : null;
+        // Also configure pdf.js worker if available
+        if (getPdfJs()) {
+            try {
+                pdfjsLib.GlobalWorkerOptions.workerSrc =
+                    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+            } catch (e) { /* ignore */ }
+        }
+        var loaded = [pdf, doc, td].filter(Boolean);
+        if (loaded.length === 3) {
+            libStatus.textContent = "All libraries loaded — PDF, DOCX, and HTML conversion ready.";
+            libStatus.className = "ok";
+        } else if (loaded.length > 0) {
+            libStatus.textContent = "Partial: " + loaded.join(", ") + " supported. Some CDN libraries may be blocked.";
+            libStatus.className = "warn";
+        } else {
+            libStatus.textContent = "CDN libraries could not load. Text/CSV/JSON/XML still work. Try deploying to GitHub Pages.";
+            libStatus.className = "err";
+        }
+        setTimeout(function () {
+            if (loaded.length === 3) libStatus.style.display = "none";
+        }, 4000);
+      } catch (e) {
+        libStatus.textContent = "Init error: " + e.message;
+        libStatus.className = "err";
+      }
+    }, 1500);
+
+    // ============================================================
+    // Tab switching
+    // ============================================================
+    tabs.forEach(function (t) {
+        t.addEventListener("click", function () {
+            tabs.forEach(function (x) { x.classList.remove("active"); });
+            tabContents.forEach(function (x) { x.classList.remove("active"); });
+            t.classList.add("active");
+            activeTab = t.getAttribute("data-tab");
+            document.getElementById("tab-" + activeTab).classList.add("active");
+        });
+    });
+
+    outputTabs.forEach(function (t) {
+        t.addEventListener("click", function () {
+            outputTabs.forEach(function (x) { x.classList.remove("active"); });
+            outputContents.forEach(function (x) { x.classList.remove("active"); });
+            t.classList.add("active");
+            document.getElementById("out-" + t.getAttribute("data-out")).classList.add("active");
+        });
+    });
+
+    // ============================================================
+    // File upload / drag-and-drop
+    // ============================================================
+    dropZone.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    dropZone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add("over");
+    });
+
+    dropZone.addEventListener("dragleave", function (e) {
+        e.preventDefault();
+        dropZone.classList.remove("over");
+    });
+
+    dropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove("over");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener("change", function () {
+        if (fileInput.files && fileInput.files.length) {
+            handleFile(fileInput.files[0]);
+        }
+    });
+
+    clearFileBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        currentFile = null;
+        fileInput.value = "";
+        fileInfo.style.display = "none";
+    });
+
+    function handleFile(file) {
+        currentFile = file;
+        fileNameSpan.textContent = file.name + " (" + formatBytes(file.size) + ")";
+        fileInfo.style.display = "flex";
+        // Auto-set output filename
+        var baseName = file.name.replace(/\.[^/.]+$/, "");
+        outputFilename.value = baseName;
+    }
+
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / 1048576).toFixed(1) + " MB";
+    }
+
+    // ============================================================
+    // Convert button
+    // ============================================================
+    convertBtn.addEventListener("click", async function () {
+        convertBtn.disabled = true;
+        convertBtn.textContent = "Converting\u2026";
+
+        try {
+            var markdown = "";
+
+            if (activeTab === "upload") {
+                if (!currentFile) {
+                    showToast("Please select a file first.");
+                    return;
+                }
+                markdown = await convertFile(currentFile);
+            } else if (activeTab === "paste") {
+                var text = pasteInput.value.trim();
+                if (!text) {
+                    showToast("Please paste some text first.");
+                    return;
+                }
+                markdown = convertPlainText(text);
+            } else if (activeTab === "html") {
+                var html = htmlInput.value.trim();
+                if (!html) {
+                    showToast("Please paste some HTML first.");
+                    return;
+                }
+                var td = getTurndown();
+                if (td) {
+                    markdown = td.turndown(html);
+                } else {
+                    // Fallback: basic HTML tag stripping
+                    markdown = htmlToMarkdownFallback(html);
+                }
+            }
+
+            if (markdown) {
+                showOutput(markdown);
+            }
+        } catch (err) {
+            console.error("Conversion error:", err);
+            showToast("Error: " + (err.message || "Unknown error"));
+        } finally {
+            convertBtn.disabled = false;
+            convertBtn.textContent = "Convert to Markdown";
+        }
+    });
+
+    // ============================================================
+    // File conversion dispatcher
+    // ============================================================
+    async function convertFile(file) {
+        var ext = file.name.split(".").pop().toLowerCase();
+        var readers = {
+            pdf:  convertPDF,
+            docx: convertDocx,
+            doc:  convertDocFallback,
+            txt:  convertTextFile,
+            md:   convertTextFile,
+            rst:  convertTextFile,
+            tex:  convertTextFile,
+            log:  convertTextFile,
+            html: convertHTMLFile,
+            htm:  convertHTMLFile,
+            rtf:  convertRTFFile,
+            csv:  convertCSVFile,
+            tsv:  convertTSVFile,
+            json: convertJSONFile,
+            xml:  convertXMLFile,
+        };
+
+        var handler = readers[ext];
+        if (!handler) {
+            throw new Error("Unsupported file type: ." + ext);
+        }
+        return handler(file);
+    }
+
+    // ============================================================
+    // PDF
+    // ============================================================
+    async function convertPDF(file) {
+        var lib = getPdfJs();
+        if (!lib) {
+            throw new Error("PDF.js library not loaded. Check your internet connection or deploy to GitHub Pages.");
+        }
+        // Ensure worker is set
+        try {
+            lib.GlobalWorkerOptions.workerSrc =
+                "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        } catch (e) { /* ignore */ }
+
+        var arrayBuffer = await file.arrayBuffer();
+        var pdf = await lib.getDocument({ data: arrayBuffer }).promise;
+        var totalPages = pdf.numPages;
+        var markdown = "# " + file.name.replace(/\.pdf$/i, "") + "\n\n";
+
+        for (var i = 1; i <= totalPages; i++) {
+            var page = await pdf.getPage(i);
+            var content = await page.getTextContent();
+            var lines = [];
+            var lastY = null;
+
+            content.items.forEach(function (item) {
+                if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) {
+                    lines.push("\n");
+                }
+                lines.push(item.str);
+                lastY = item.transform[5];
+            });
+
+            var pageText = lines.join("").trim();
+            if (pageText) {
+                if (totalPages > 1) {
+                    markdown += "## Page " + i + "\n\n";
+                }
+                markdown += pageText + "\n\n";
+            }
+        }
+
+        return markdown.trim();
+    }
+
+    // ============================================================
+    // DOCX (via mammoth -> HTML -> Turndown)
+    // ============================================================
+    async function convertDocx(file) {
+        var mam = getMammoth();
+        if (!mam) {
+            throw new Error("Mammoth.js library not loaded. Check your internet connection or deploy to GitHub Pages.");
+        }
+        var arrayBuffer = await file.arrayBuffer();
+        var result = await mam.convertToHtml({ arrayBuffer: arrayBuffer });
+        if (result.messages && result.messages.length) {
+            console.warn("Mammoth warnings:", result.messages);
+        }
+        var td = getTurndown();
+        if (td) {
+            return td.turndown(result.value);
+        } else {
+            return htmlToMarkdownFallback(result.value);
+        }
+    }
+
+    // ============================================================
+    // DOC fallback (binary .doc - best effort plain text extraction)
+    // ============================================================
+    async function convertDocFallback(file) {
+        var arrayBuffer = await file.arrayBuffer();
+        var bytes = new Uint8Array(arrayBuffer);
+        var text = "";
+        for (var i = 0; i < bytes.length; i++) {
+            var ch = bytes[i];
+            if ((ch >= 32 && ch <= 126) || ch === 10 || ch === 13 || ch === 9) {
+                text += String.fromCharCode(ch);
+            }
+        }
+        text = text.replace(/[^\S\n]{4,}/g, " ");
+        text = text.replace(/(.)\1{5,}/g, "");
+        text = text.replace(/\n{3,}/g, "\n\n");
+        return convertPlainText(text.trim());
+    }
+
+    // ============================================================
+    // Plain text / Markdown / RST / TeX
+    // ============================================================
+    async function convertTextFile(file) {
+        var text = await file.text();
+        return convertPlainText(text);
+    }
+
+    function convertPlainText(text) {
+        var lines = text.split(/\r?\n/);
+        var md = "";
+
+        for (var idx = 0; idx < lines.length; idx++) {
+            var trimmed = lines[idx].trimEnd();
+
+            // Already valid Markdown? Pass through.
+            if (/^#{1,6}\s/.test(trimmed) ||
+                /^[-*+]\s/.test(trimmed) ||
+                /^\d+\.\s/.test(trimmed) ||
+                /^>\s/.test(trimmed) ||
+                /^```/.test(trimmed) ||
+                /^\|/.test(trimmed)) {
+                md += trimmed + "\n";
+                continue;
+            }
+
+            // Likely a heading: short line, all caps or title case, no ending punctuation
+            if (trimmed.length > 0 && trimmed.length <= 80 &&
+                /^[A-Z]/.test(trimmed) &&
+                !/[.!?;,:]$/.test(trimmed) &&
+                (trimmed === trimmed.toUpperCase() ||
+                 /^([A-Z][a-z]*\s*)+$/.test(trimmed))) {
+                if (trimmed === trimmed.toUpperCase() && trimmed.length < 50) {
+                    md += "\n## " + titleCase(trimmed) + "\n\n";
+                } else {
+                    md += "\n### " + trimmed + "\n\n";
+                }
+                continue;
+            }
+
+            // Bullet-like patterns
+            if (/^[\u2022\u2023\u25E6\u2043\u25CF\u25CB\u25A0\u25A1\u25C6\u25C7\u25BA\u25B8\u2013\u2014]\s*/.test(trimmed)) {
+                md += "- " + trimmed.replace(/^[\u2022\u2023\u25E6\u2043\u25CF\u25CB\u25A0\u25A1\u25C6\u25C7\u25BA\u25B8\u2013\u2014]\s*/, "") + "\n";
+                continue;
+            }
+
+            // Empty line
+            if (trimmed === "") {
+                md += "\n";
+                continue;
+            }
+
+            // Default paragraph
+            md += trimmed + "\n";
+        }
+
+        md = md.replace(/\n{3,}/g, "\n\n").trim();
+        return md;
+    }
+
+    function titleCase(str) {
+        return str.toLowerCase().replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+    }
+
+    // ============================================================
+    // HTML file
+    // ============================================================
+    async function convertHTMLFile(file) {
+        var html = await file.text();
+        var match = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        var content = match ? match[1] : html;
+        var td = getTurndown();
+        if (td) {
+            return td.turndown(content);
+        }
+        return htmlToMarkdownFallback(content);
+    }
+
+    // ============================================================
+    // Fallback HTML -> Markdown (no library needed)
+    // ============================================================
+    function htmlToMarkdownFallback(html) {
+        var md = html;
+        // Headings
+        md = md.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, "\n# $1\n\n");
+        md = md.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, "\n## $1\n\n");
+        md = md.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, "\n### $1\n\n");
+        md = md.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, "\n#### $1\n\n");
+        md = md.replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, "\n##### $1\n\n");
+        md = md.replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, "\n###### $1\n\n");
+        // Bold / italic
+        md = md.replace(/<(strong|b)[^>]*>([\s\S]*?)<\/\1>/gi, "**$2**");
+        md = md.replace(/<(em|i)[^>]*>([\s\S]*?)<\/\1>/gi, "*$2*");
+        // Links
+        md = md.replace(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, "[$2]($1)");
+        // Line breaks & paragraphs
+        md = md.replace(/<br\s*\/?>/gi, "\n");
+        md = md.replace(/<\/p>/gi, "\n\n");
+        md = md.replace(/<p[^>]*>/gi, "");
+        // List items
+        md = md.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, "- $1\n");
+        // Strip remaining tags
+        md = md.replace(/<[^>]+>/g, "");
+        // Decode entities
+        md = md.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
+        md = md.replace(/&nbsp;/g, " ").replace(/&quot;/g, '"');
+        // Clean up
+        md = md.replace(/\n{3,}/g, "\n\n").trim();
+        return md;
+    }
+
+    // ============================================================
+    // RTF (strip RTF control codes, extract text)
+    // ============================================================
+    async function convertRTFFile(file) {
+        var rtf = await file.text();
+        var text = rtf;
+        text = text.replace(/\{\\[^{}]*\}/g, "");
+        text = text.replace(/\\[a-z]+\d*\s?/gi, "");
+        text = text.replace(/[{}]/g, "");
+        text = text.replace(/\\\\/g, "\\");
+        text = text.replace(/\\'[0-9a-f]{2}/gi, "");
+        text = text.trim();
+        return convertPlainText(text);
+    }
+
+    // ============================================================
+    // CSV -> Markdown table
+    // ============================================================
+    async function convertCSVFile(file) {
+        var text = await file.text();
+        return csvToTable(text, ",");
+    }
+
+    async function convertTSVFile(file) {
+        var text = await file.text();
+        return csvToTable(text, "\t");
+    }
+
+    function csvToTable(text, delimiter) {
+        var rows = parseDelimited(text, delimiter);
+        if (rows.length === 0) return "";
+
+        var md = "";
+        var header = rows[0];
+        md += "| " + header.join(" | ") + " |\n";
+        md += "| " + header.map(function () { return "---"; }).join(" | ") + " |\n";
+
+        for (var i = 1; i < rows.length; i++) {
+            while (rows[i].length < header.length) rows[i].push("");
+            md += "| " + rows[i].join(" | ") + " |\n";
+        }
+
+        return md.trim();
+    }
+
+    function parseDelimited(text, delimiter) {
+        var rows = [];
+        var lines = text.split(/\r?\n/);
+        for (var li = 0; li < lines.length; li++) {
+            var line = lines[li];
+            if (line.trim() === "") continue;
+            if (delimiter === ",") {
+                // Handle quoted CSV fields
+                var row = [];
+                var field = "";
+                var inQuotes = false;
+                for (var i = 0; i < line.length; i++) {
+                    var ch = line[i];
+                    if (inQuotes) {
+                        if (ch === '"' && line[i + 1] === '"') {
+                            field += '"';
+                            i++;
+                        } else if (ch === '"') {
+                            inQuotes = false;
+                        } else {
+                            field += ch;
+                        }
+                    } else {
+                        if (ch === '"') {
+                            inQuotes = true;
+                        } else if (ch === delimiter) {
+                            row.push(field.trim());
+                            field = "";
+                        } else {
+                            field += ch;
+                        }
+                    }
+                }
+                row.push(field.trim());
+                rows.push(row);
+            } else {
+                rows.push(line.split(delimiter).map(function (f) { return f.trim(); }));
+            }
+        }
+        return rows;
+    }
+
+    // ============================================================
+    // JSON -> Markdown
+    // ============================================================
+    async function convertJSONFile(file) {
+        var text = await file.text();
+        var parsed;
+        try {
+            parsed = JSON.parse(text);
+        } catch (e) {
+            return "```json\n" + text + "\n```";
+        }
+
+        var md = "# " + file.name + "\n\n";
+
+        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "object") {
+            var keys = Object.keys(parsed[0]);
+            md += "| " + keys.join(" | ") + " |\n";
+            md += "| " + keys.map(function () { return "---"; }).join(" | ") + " |\n";
+            for (var i = 0; i < parsed.length; i++) {
+                var item = parsed[i];
+                md += "| " + keys.map(function (k) { return String(item[k] != null ? item[k] : ""); }).join(" | ") + " |\n";
+            }
+        } else {
+            md += "```json\n" + JSON.stringify(parsed, null, 2) + "\n```\n";
+        }
+
+        return md.trim();
+    }
+
+    // ============================================================
+    // XML -> Markdown (code block)
+    // ============================================================
+    async function convertXMLFile(file) {
+        var text = await file.text();
+        return "# " + file.name + "\n\n```xml\n" + text + "\n```";
+    }
+
+    // ============================================================
+    // Show output
+    // ============================================================
+    function showOutput(markdown) {
+        markdownOut.value = markdown;
+        markdownPrev.innerHTML = renderMarkdown(markdown);
+        outputSection.style.display = "block";
+        outputSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    // ============================================================
+    // Minimal Markdown -> HTML renderer (no dependencies)
+    // ============================================================
+    function renderMarkdown(md) {
+        var html = md;
+
+        // Escape HTML
+        html = html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        // Code blocks (fenced)
+        html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function (_, lang, code) {
+            return '<pre><code class="language-' + lang + '">' + code.trim() + "</code></pre>";
+        });
+
+        // Headings
+        html = html.replace(/^######\s+(.+)$/gm, "<h6>$1</h6>");
+        html = html.replace(/^#####\s+(.+)$/gm,  "<h5>$1</h5>");
+        html = html.replace(/^####\s+(.+)$/gm,   "<h4>$1</h4>");
+        html = html.replace(/^###\s+(.+)$/gm,    "<h3>$1</h3>");
+        html = html.replace(/^##\s+(.+)$/gm,     "<h2>$1</h2>");
+        html = html.replace(/^#\s+(.+)$/gm,      "<h1>$1</h1>");
+
+        // Bold & italic
+        html = html.replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>");
+        html = html.replace(/\*\*(.+?)\*\*/g,     "<strong>$1</strong>");
+        html = html.replace(/\*(.+?)\*/g,          "<em>$1</em>");
+
+        // Inline code
+        html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+        // Blockquotes
+        html = html.replace(/^&gt;\s+(.+)$/gm, "<blockquote>$1</blockquote>");
+
+        // Unordered lists
+        html = html.replace(/^[-*+]\s+(.+)$/gm, "<li>$1</li>");
+
+        // Ordered lists
+        html = html.replace(/^\d+\.\s+(.+)$/gm, "<li>$1</li>");
+
+        // Wrap consecutive <li> in <ul>
+        html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, "<ul>$1</ul>");
+
+        // Tables
+        html = html.replace(/^(\|.+\|)\n(\|[\s:|-]+\|)\n((?:\|.+\|\n?)*)/gm, function (_, headerLine, sepLine, bodyLines) {
+            var headers = headerLine.split("|").filter(Boolean).map(function (c) { return "<th>" + c.trim() + "</th>"; }).join("");
+            var rows = bodyLines.trim().split("\n").map(function (row) {
+                var cells = row.split("|").filter(Boolean).map(function (c) { return "<td>" + c.trim() + "</td>"; }).join("");
+                return "<tr>" + cells + "</tr>";
+            }).join("");
+            return "<table><thead><tr>" + headers + "</tr></thead><tbody>" + rows + "</tbody></table>";
+        });
+
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+        // Horizontal rules
+        html = html.replace(/^---$/gm, "<hr>");
+
+        // Paragraphs
+        html = html.replace(/^(?!<[a-z/])((?!<).+)$/gm, "<p>$1</p>");
+        html = html.replace(/<p>\s*<\/p>/g, "");
+
+        return html;
+    }
+
+    // ============================================================
+    // Copy + Download
+    // ============================================================
+    copyBtn.addEventListener("click", function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(markdownOut.value).then(function () {
+                showToast("Copied to clipboard!");
+            }).catch(function () {
+                fallbackCopy();
+            });
+        } else {
+            fallbackCopy();
+        }
+    });
+
+    function fallbackCopy() {
+        markdownOut.removeAttribute("readonly");
+        markdownOut.select();
+        document.execCommand("copy");
+        markdownOut.setAttribute("readonly", "");
+        showToast("Copied to clipboard!");
+    }
+
+    downloadBtn.addEventListener("click", function () {
+        var filename = (outputFilename.value.trim() || "output") + ".md";
+        var blob = new Blob([markdownOut.value], { type: "text/markdown;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Downloaded " + filename);
+    });
+
+    // ============================================================
+    // Toast notification
+    // ============================================================
+    var toastTimer = null;
+    function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.style.display = "block";
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+            toastEl.style.display = "none";
+        }, 3000);
+    }
+
+    // Log that app initialized successfully
+    console.log("MD Filemaker initialized.");
+
+})();
+
+</script>
+</body>
+</html>
